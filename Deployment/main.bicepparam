@@ -6,3 +6,5 @@ param linuxFxVersion = 'DOTNETCORE|8.0'
 param sqlUserId = 'mysqluser'
 param sqlPassword = 'Mysqlpassword!'
 
+param username = ''
+param userSid = ''
