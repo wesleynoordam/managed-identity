@@ -49,3 +49,12 @@ There are a couple of things which need to be done in order to start using manag
 
     **SQL:**<br/>
     The only change that is needed is changing the connection string by removing `User Id` and `Password` and adding `Authentication=Active Directory Default`.
+
+# 'Hacking' managed identity
+Managed Identity isn't completely 'safe'. The landscape of oauth/openid still requires tokens to be sent to the receiving party. This is no exception for managed identity, thus there is the possibility to hijack a token and use it to your advantage. Below are curl commands which you can run on a Azure App Service SSH session. The values of $IDENTITY_ENDPOINT and $IDENTITY_HEADER are found in the environment variables of the app service.
+
+```bash
+curl "$IDENTITY_ENDPOINT?resource=https://appcs-man-iden.azconfig.io&api-version=2017-09-01" -H secret:$IDENTITY_HEADER
+curl "$IDENTITY_ENDPOINT?resource=https://vault.azure.net&api-version=2017-09-01" -H secret:$IDENTITY_HEADER
+curl "$IDENTITY_ENDPOINT?resource=https://management.azure.com/&api-version=2017-09-01" -H secret:$IDENTITY_HEADER
+```

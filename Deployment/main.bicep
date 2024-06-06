@@ -10,26 +10,30 @@ param userSid string
 @secure()
 param sqlPassword string
 
+@secure()
+param keyVaultMySecretValue string
+
 var appConfigurationDataReaderRole = '516239f1-63e1-4d78-a4de-a74fb236a071'
+var keyVaultAdministratorRole = '00482a5a-887f-4fb3-b363-3b7fe8e74483'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
   name: toLower('asp-${webAppName}')
   location: location
-  properties: {
-    reserved: true
-  }
   sku: {
     name: sku
   }
   kind: 'linux'
+  properties: {
+    reserved: true
+  }
 }
 
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: toLower('app-${webAppName}')
   location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
+  // identity: {
+  //   type: 'SystemAssigned'
+  // }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
@@ -50,7 +54,7 @@ resource appService 'Microsoft.Web/sites@2020-06-01' = {
 
 resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
   name: toLower('sql-${webAppName}')
-  location: 'eastus'
+  location: location
   properties: {
     administratorLogin: sqlUserId
     administratorLoginPassword: sqlPassword
@@ -78,7 +82,7 @@ resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
 resource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   parent: sqlServer
   name: toLower('sqldb-${webAppName}')
-  location: 'eastus'
+  location: location
   sku: {
     name: 'GP_S_Gen5_1'
     tier: 'GeneralPurpose'
@@ -87,6 +91,26 @@ resource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: 34359738368
     minCapacity: json('0.5')
+  }
+}
+
+resource keyvault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: toLower('kv-${webAppName}')
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: tenant().tenantId
+    enableRbacAuthorization: true
+  }
+
+  resource mySecret 'secrets' = {
+    name: 'MySecret'
+    properties: {
+      value: keyVaultMySecretValue
+    }
   }
 }
 
@@ -106,18 +130,34 @@ resource configStoreKeyValue 'Microsoft.AppConfiguration/configurationStores/key
   }
 }
 
-module appServiceAppConfigurationRoleAssignment 'role-assignment.bicep' = {
-  name: 'app-appcs-ra'
-  params: {
-    principalId: appService.identity.principalId
-    roleDefinitionID: appConfigurationDataReaderRole
-  }
-}
+// module appServiceKeyVaultRoleAssignment 'role-assignment.bicep' = {
+//   name: 'app-kv-ra'
+//   params: {
+//     principalId: appService.identity.principalId
+//     roleDefinitionID: keyVaultAdministratorRole
+//   }
+// }
 
-module userAppConfigurationRoleAssignment 'role-assignment.bicep' = {
-  name: 'usr-appcs-ra'
-  params: {
-    principalId: userSid
-    roleDefinitionID: appConfigurationDataReaderRole
-  }
-}
+// module userKeyVaultRoleAssignment 'role-assignment.bicep' = {
+//   name: 'usr-kv-ra'
+//   params: {
+//     principalId: userSid
+//     roleDefinitionID: keyVaultAdministratorRole
+//   }
+// }
+
+// module appServiceAppConfigurationRoleAssignment 'role-assignment.bicep' = {
+//   name: 'app-appcs-ra'
+//   params: {
+//     principalId: appService.identity.principalId
+//     roleDefinitionID: appConfigurationDataReaderRole
+//   }
+// }
+
+// module userAppConfigurationRoleAssignment 'role-assignment.bicep' = {
+//   name: 'usr-appcs-ra'
+//   params: {
+//     principalId: userSid
+//     roleDefinitionID: appConfigurationDataReaderRole
+//   }
+// }
