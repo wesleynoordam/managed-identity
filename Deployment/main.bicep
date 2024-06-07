@@ -31,9 +31,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2020-06-01' = {
 resource appService 'Microsoft.Web/sites@2020-06-01' = {
   name: toLower('app-${webAppName}')
   location: location
-  // identity: {
-  //   type: 'SystemAssigned'
-  // }
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
@@ -130,34 +130,34 @@ resource configStoreKeyValue 'Microsoft.AppConfiguration/configurationStores/key
   }
 }
 
-// module appServiceKeyVaultRoleAssignment 'role-assignment.bicep' = {
-//   name: 'app-kv-ra'
-//   params: {
-//     principalId: appService.identity.principalId
-//     roleDefinitionID: keyVaultAdministratorRole
-//   }
-// }
+module appServiceKeyVaultRoleAssignment 'role-assignment.bicep' = {
+  name: 'app-kv-ra'
+  params: {
+    principalId: appService.identity.principalId
+    roleDefinitionID: keyVaultAdministratorRole
+  }
+}
 
-// module userKeyVaultRoleAssignment 'role-assignment.bicep' = {
-//   name: 'usr-kv-ra'
-//   params: {
-//     principalId: userSid
-//     roleDefinitionID: keyVaultAdministratorRole
-//   }
-// }
+module userKeyVaultRoleAssignment 'role-assignment.bicep' = {
+  name: 'usr-kv-ra'
+  params: {
+    principalId: userSid
+    roleDefinitionID: keyVaultAdministratorRole
+  }
+}
 
-// module appServiceAppConfigurationRoleAssignment 'role-assignment.bicep' = {
-//   name: 'app-appcs-ra'
-//   params: {
-//     principalId: appService.identity.principalId
-//     roleDefinitionID: appConfigurationDataReaderRole
-//   }
-// }
+module appServiceAppConfigurationRoleAssignment 'role-assignment.bicep' = {
+  name: 'app-appcs-ra'
+  params: {
+    principalId: appService.identity.principalId
+    roleDefinitionID: appConfigurationDataReaderRole
+  }
+}
 
-// module userAppConfigurationRoleAssignment 'role-assignment.bicep' = {
-//   name: 'usr-appcs-ra'
-//   params: {
-//     principalId: userSid
-//     roleDefinitionID: appConfigurationDataReaderRole
-//   }
-// }
+module userAppConfigurationRoleAssignment 'role-assignment.bicep' = {
+  name: 'usr-appcs-ra'
+  params: {
+    principalId: userSid
+    roleDefinitionID: appConfigurationDataReaderRole
+  }
+}
